@@ -53,6 +53,7 @@ test("階層の作成・編集・日付順・再読み込み・直接URL・パ�
   await page.goto(entryUrl);
   await expect(page.getByRole("heading", { name: edited, exact: true })).toBeVisible();
   await expect(page.locator("body")).toHaveJSProperty("scrollWidth", await page.locator("body").evaluate(el => el.clientWidth));
+  await expect(page.locator(".bn-editor")).toBeVisible();
   await page.screenshot({ path: "test-results/m2-entry.png", fullPage: true });
 });
 

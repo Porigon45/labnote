@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BookMarked, FileText, FlaskConical, FolderOpen, LayoutDashboard, Monitor, Sprout, TestTubes } from "lucide-react";
-import { recordPath, statusLabels, type ResearchRecord } from "@/server/research";
+import { kindLabels, recordPath, statusLabels, type ResearchRecord } from "@/server/research";
 
 export function Workspace({ children, section = "home", crumbs = [], info }: {
   children: React.ReactNode; section?: "home" | "projects" | "series" | "protocols" | "samples" | "memos" | "search" | "archive";
@@ -17,6 +17,7 @@ export function Workspace({ children, section = "home", crumbs = [], info }: {
       <Link href="/search" className={`nav-item ${section === "search" ? "nav-item-active" : ""}`}><FileText size={18} aria-hidden="true" />検索</Link>
       <Link href="/archive" className={`nav-item ${section === "archive" ? "nav-item-active" : ""}`}><FolderOpen size={18} aria-hidden="true" />アーカイブ</Link>
       <p className="sidebar-note">ひとつずつ、研究の足跡を。</p>
+      <Link className="nav-item" href="/storage">保存とバックアップ</Link>
     </aside>
     <div className="main-shell">
       <header className="topbar"><nav aria-label="パンくず"><ol><li><Link href="/">ホーム</Link></li>{crumbs.map((c, i) => <li key={i}>{c.href ? <Link href={c.href}>{c.title}</Link> : <span aria-current="page">{c.title}</span>}</li>)}</ol></nav><span className="local-badge"><Monitor size={14} aria-hidden="true" />ローカル</span></header>
@@ -29,6 +30,6 @@ export function RecordList({ records, empty, allRecords = [] }: { records: Resea
   if (!records.length) return <div className="empty-state"><FileText size={27} aria-hidden="true" /><p>{empty}</p></div>;
   return <ul className="record-list">{records.map(r => {
     const parent = allRecords.find(p => p.id === r.parentId);
-    return <li key={r.id}><Link href={recordPath(r)}><span className="record-mark" aria-hidden="true">{r.kind === "entry" ? <FileText size={20} /> : r.kind === "series" ? <FlaskConical size={20} /> : <FolderOpen size={20} />}</span><span className="record-summary"><strong>{r.title}</strong><small>{[r.date, parent?.title].filter(Boolean).join(" · ") || "プロジェクト"}</small></span><span className={`status-badge status-${r.status}`}>{statusLabels[r.status]}</span><span aria-hidden="true">→</span></Link></li>;
+    return <li key={r.id}><Link href={recordPath(r)}><span className="record-mark" aria-hidden="true">{r.kind === "entry" ? <FileText size={20} /> : r.kind === "series" ? <FlaskConical size={20} /> : <FolderOpen size={20} />}</span><span className="record-summary"><strong>{r.title}</strong><small>{[r.date, parent?.title].filter(Boolean).join(" · ") || r.category || kindLabels[r.kind]}</small></span><span className={`status-badge status-${r.status}`}>{statusLabels[r.status]}</span><span aria-hidden="true">→</span></Link></li>;
   })}</ul>;
 }

@@ -4,7 +4,7 @@ import type { records } from "./db/schema";
 
 export type ResearchRecord = typeof records.$inferSelect;
 export type FlowKind = "project" | "series" | "entry";
-export const kindLabels = { project: "プロジェクト", series: "実験シリーズ", entry: "日次記録" };
+export const kindLabels = { project: "プロジェクト", series: "実験シリーズ", entry: "日次記録", protocol: "プロトコル", sample: "試料", memo: "研究メモ", theme: "研究テーマ", page: "ページ" };
 export const statusLabels = { planned: "予定", active: "進行中", completed: "完了" };
 export function recordPath(record: Pick<ResearchRecord, "kind" | "id">) {
   const segment = record.kind === "project" ? "projects" : record.kind === "series" ? "series" : record.kind === "protocol" ? "protocols" : record.kind === "sample" ? "samples" : record.kind === "memo" ? "memos" : "entries";

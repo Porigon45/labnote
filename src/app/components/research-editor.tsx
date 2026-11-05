@@ -57,7 +57,11 @@ export default function ResearchEditor({ record, draft }: { record: ResearchReco
       try {
         const response = await fetch(`/api/records/${record.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision: revision.current, body: JSON.parse(body) }) });
         if (response.status === 409) { locked.current = true; throw new Error("競合：下書きを保管しています"); }
-        if (!response.ok) throw new Error("再送待ち");
+        if (!response.ok) {
+          let message = "再送待ち";
+          if (response.status >= 400 && response.status < 500) { try { message += `：${(await response.json()).error}`; } catch {} }
+          throw new Error(message);
+        }
         const result = await response.json();
         revision.current = result.revision;
         saved.current = body;

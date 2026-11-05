@@ -6,9 +6,10 @@ test("検索と絞り込み、被リンク、アーカイブ・復元を操作�
   await page.goto(`/entries/${entry.id}`);
   await page.getByLabel("タグ（カンマ区切り）").fill("OD600, 培養");
   await page.getByRole("button", { name: "タグを保存" }).click();
+  await expect(page.locator("form").filter({ has: page.getByRole("button", { name: "タグを保存" }) }).getByRole("status")).toHaveText("保存しました。");
   await page.getByRole("combobox", { name: "リンク先", exact: true }).selectOption(target.id);
   await page.getByRole("button", { name: "リンクを追加" }).click();
-  await expect(page.getByRole("heading", { name: "関連ページ" })).toBeVisible();
+  await expect(page.locator("section").filter({ has: page.getByRole("heading", { name: "関連ページ", exact: true }) }).getByRole("link", { name: new RegExp(target.title) })).toBeVisible();
   await page.goto(`/memos/${target.id}`);
   await expect(page.getByRole("main").getByRole("link", { name: /日次記録/ })).toBeVisible();
   await page.goto(`/search?q=OD600&series=${entry.parentId}&kind=entry&tag=${encodeURIComponent("培養")}`);

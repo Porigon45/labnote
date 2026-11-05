@@ -1,6 +1,8 @@
 import { withResearch } from "@/server/research";
 import { apiError, checkOrigin, HttpError } from "@/server/http";
 import type { Block } from "@/server/db/schema";
+import { blockTypes } from "@/lib/blocks";
+import { validMeasurement } from "@/lib/measurement";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +26,8 @@ export async function PATCH(request: Request, context: Context) {
     if (!input || !Number.isSafeInteger(input.revision) || input.revision < 1 || !Array.isArray(input.body)) throw new HttpError(400, "本文と更新番号を指定してください。");
     const ids = new Set<string>();
     const valid = (blocks: Block[], depth = 0): boolean => depth < 30 && blocks.every(b => {
-      if (!b || typeof b.id !== "string" || !b.id || ids.has(b.id) || typeof b.type !== "string") return false;
+      if (!b || typeof b.id !== "string" || !b.id || ids.has(b.id) || !blockTypes.has(b.type)) return false;
+      if (b.type === "measurement") { try { if (!validMeasurement(JSON.parse((b.props as { data: string }).data))) return false; } catch { return false; } }
       ids.add(b.id);
       return b.children === undefined || (Array.isArray(b.children) && valid(b.children as Block[], depth + 1));
     });
