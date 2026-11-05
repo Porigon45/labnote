@@ -1,11 +1,11 @@
 import { test, expect } from "@playwright/test";
 
-test("簡潔なホーム画面を表示できる", async ({ page }) => {
+test("ダッシュボードを表示できる", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "実験ノート", exact: true })).toBeVisible();
-  await expect(page.getByText("ノート機能を準備中", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "最近の記録", exact: true })).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "ja");
   await expect(page.getByText("開発ロードマップ")).toHaveCount(0);
   await page.reload();

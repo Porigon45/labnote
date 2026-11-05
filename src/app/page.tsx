@@ -1,49 +1,15 @@
-import {
-  BookMarked, FileText, FlaskConical, FolderOpen,
-  LayoutDashboard, Monitor, NotebookPen, Sprout, TestTubes,
-} from "lucide-react";
+import Link from "next/link";
+import { Workspace, RecordList } from "./components/workspace";
+import { today, withResearch } from "@/server/research";
 
-const sections = [
-  { label: "プロジェクト", icon: FolderOpen },
-  { label: "実験シリーズ", icon: FlaskConical },
-  { label: "プロトコル", icon: BookMarked },
-  { label: "試料台帳", icon: TestTubes },
-  { label: "研究メモ", icon: FileText },
-];
-
+export const dynamic = "force-dynamic";
 export default function Home() {
-  return (
-    <div className="workspace">
-      <a className="skip-link" href="#main-content">本文へ移動</a>
-      <aside className="sidebar" aria-label="ワークスペース">
-        <a className="brand" href="/" aria-label="labnote ホーム">
-          <Sprout size={25} strokeWidth={1.65} aria-hidden="true" />
-          <span>labnote.</span>
-        </a>
-        <nav aria-label="メインナビゲーション">
-          <a className="nav-item nav-item-active" href="/" aria-current="page">
-            <LayoutDashboard size={18} aria-hidden="true" />ホーム
-          </a>
-          {sections.map(({ label, icon: Icon }) => (
-            <div className="nav-item nav-item-planned" key={label} aria-disabled="true">
-              <Icon size={18} aria-hidden="true" /><span>{label}</span>
-            </div>
-          ))}
-        </nav>
-      </aside>
-      <div className="main-shell">
-        <header className="topbar">
-          <span>ホーム</span>
-          <span className="local-badge"><Monitor size={14} aria-hidden="true" />ローカル</span>
-        </header>
-        <main id="main-content">
-          <h1>実験ノート</h1>
-          <section className="notebook-empty" aria-label="ノートの状態">
-            <NotebookPen size={32} strokeWidth={1.4} aria-hidden="true" />
-            <p>ノート機能を準備中</p>
-          </section>
-        </main>
-      </div>
-    </div>
-  );
+  const all = withResearch(repo => repo.list());
+  const entries = all.filter(r => r.kind === "entry");
+  const active = all.filter(r => r.kind === "series" && r.status === "active");
+  return <Workspace><div className="page-heading"><div><p className="eyebrow">YOUR RESEARCH JOURNAL · {today()}</p><h1>実験ノート</h1><p className="subtitle">今日の発見を、次の一歩へ。</p></div><Link className="button" href="/projects">プロジェクトを開く</Link></div>
+    <div className="stats"><Link href="/projects"><strong>{all.filter(r => r.kind === "project").length}</strong><span>プロジェクト</span></Link><Link href="/series"><strong>{active.length}</strong><span>進行中の実験</span></Link><div><strong>{entries.length}</strong><span>日次記録</span></div></div>
+    <section className="panel"><div className="section-heading"><h2>最近の記録</h2><span>更新順</span></div><RecordList records={entries.slice(0, 8)} allRecords={all} empty="日次記録はまだありません。プロジェクトから記録を始めましょう。" /></section>
+    <section className="panel"><div className="section-heading"><h2>進行中の実験</h2><Link href="/series">すべて見る →</Link></div><RecordList records={active.slice(0, 5)} allRecords={all} empty="進行中の実験シリーズはありません。" /></section>
+  </Workspace>;
 }
