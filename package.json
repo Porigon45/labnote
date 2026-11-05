@@ -17,9 +17,13 @@
     "db:migrate": "tsx scripts/migrate.ts"
   },
   "dependencies": {
+    "@blocknote/core": "0.57.0",
+    "@blocknote/mantine": "0.57.0",
+    "@blocknote/react": "0.57.0",
     "@next/env": "16.4.5",
     "better-sqlite3": "13.0.3",
     "drizzle-orm": "0.45.4",
+    "katex": "0.19.1",
     "lucide-react": "1.68.0",
     "next": "16.4.5",
     "react": "19.3.1",
@@ -28,6 +32,7 @@
   "devDependencies": {
     "@playwright/test": "1.64.1",
     "@types/better-sqlite3": "9.6.0",
+    "@types/katex": "0.16.8",
     "@types/node": "24.19.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",

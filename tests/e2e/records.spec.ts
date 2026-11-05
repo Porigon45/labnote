@@ -27,7 +27,7 @@ test("階層の作成・編集・日付順・再読み込み・直接URL・パ�
   await page.getByLabel("日付", { exact: true }).fill("2026-11-03");
   await page.getByRole("combobox", { name: "状態", exact: true }).selectOption("completed");
   await page.getByRole("button", { name: "変更を保存" }).click();
-  await expect(page.getByRole("status")).toHaveText("保存しました。");
+  await expect(page.locator("form").getByRole("status")).toHaveText("保存しました。");
   // Save a second time to verify that the form receives the new revision.
   await page.getByLabel("日付", { exact: true }).fill("2026-11-02");
   await page.getByRole("button", { name: "変更を保存" }).click();
@@ -68,7 +68,7 @@ test("不正入力と競合を表示し、入力を保持する", async ({ page,
   await other.goto(url);
   await page.getByLabel("タイトル", { exact: true }).fill("先に保存した内容");
   await page.getByRole("button", { name: "変更を保存" }).click();
-  await expect(page.getByRole("status")).toBeVisible();
+  await expect(page.locator("form").getByRole("status")).toBeVisible();
   await other.getByLabel("タイトル", { exact: true }).fill("古い画面の入力");
   await other.getByRole("button", { name: "変更を保存" }).click();
   await expect(other.getByRole("main").getByRole("alert")).toContainText("別の編集が保存されています");

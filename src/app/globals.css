@@ -6,6 +6,20 @@
   --line: #e0e6dd;
   --sidebar: #203d33;
 }
+.editor-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; font-size: 12px; }
+.editor-toolbar label { display: flex; gap: 10px; align-items: center; }
+.editor-toolbar select { max-width: 150px; padding: 8px; }
+.editor-toolbar [role="status"] { color: var(--muted); }
+.research-editor .bn-container { font-family: inherit; }
+.research-editor .bn-editor { padding-inline: 35px 10px; }
+.research-editor .bn-editor button, .research-editor .bn-editor input { font: inherit; }
+.timed-step { display: flex; align-items: baseline; gap: 12px; width: 100%; }
+.timed-step input { width: 100px; border: 1px solid var(--line); padding: 4px; background: #f4f7ef; }
+.timed-step > div { flex: 1; }
+.math-block, .page-link-block { padding: 12px; background: var(--paper); width: 100%; }
+.math-block input, .page-link-block input { max-width: 100%; padding: 6px; border: 1px solid var(--line); }
+.page-link-block { display: grid; gap: 8px; }
+.page-link-block label { display: grid; gap: 4px; }
 * { box-sizing: border-box; }
 body { margin: 0; color: var(--ink); background: var(--paper); font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif; font-size: 14px; -webkit-font-smoothing: antialiased; }
 a { color: inherit; text-decoration: none; }
