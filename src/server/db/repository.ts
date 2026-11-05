@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { validMeasurement } from "../../lib/measurement";
 import { and, desc, eq } from "drizzle-orm";
 import type { DatabaseConnection } from "./index";
 import { attachments, links, measurements, protocolSnapshots, protocolVersions, records, recordTags, samples, tags, type Block, type MeasurementData, type RecordKind } from "./schema";
@@ -64,6 +65,20 @@ export function createRepository(connection: DatabaseConnection) {
       const updated = db.update(records).set({ ...patch, title: patch.title?.trim() ?? existing.title, revision: revision + 1, updatedAt: now() })
         .where(and(eq(records.id, id), eq(records.revision, revision))).returning().get();
       if (!updated) throw new ConflictError();
+      if (patch.body !== undefined) {
+        db.delete(measurements).where(eq(measurements.recordId, id)).run();
+        const collect = (blocks: Block[]) => {
+          for (const b of blocks) {
+            if (b.type === "measurement") {
+              const data = JSON.parse((b.props as { data: string }).data) as MeasurementData;
+              if (!validMeasurement(data)) throw new Error("測定値が不正です。");
+              db.insert(measurements).values({ id: b.id, recordId: id, data, createdAt: now() }).run();
+            }
+            if (Array.isArray(b.children)) collect(b.children as Block[]);
+          }
+        };
+        collect(patch.body);
+      }
       if (updated.kind === "protocol") addVersion(updated);
       return updated;
     });

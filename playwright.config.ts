@@ -2,6 +2,8 @@ import { resolve } from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
+  workers: 2,
+  timeout: 60_000,
   expect: { timeout: 15_000 },
   testDir: "./tests/e2e",
   fullyParallel: true,

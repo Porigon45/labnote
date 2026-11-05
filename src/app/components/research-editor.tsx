@@ -11,6 +11,8 @@ import type { Block } from "@/server/db/schema";
 import type { Draft } from "./editor-loader";
 import "@blocknote/mantine/style.css";
 import "katex/dist/katex.min.css";
+import { measurementBlock } from "./measurement-block";
+import { uploadAttachment } from "./attachment-panel";
 
 const timestamp = createReactBlockSpec({ type: "timestamp", propSchema: { time: { default: "09:00" } }, content: "inline" }, {
   render: ({ block, editor, contentRef }) => <div className="timed-step"><input aria-label="操作時刻" type="time" value={block.props.time} onChange={e => editor.updateBlock(block, { props: { time: e.target.value } })} /><div ref={contentRef} /></div>,
@@ -21,12 +23,13 @@ const math = createReactBlockSpec({ type: "math", propSchema: { formula: { defau
 const pageLink = createReactBlockSpec({ type: "pageLink", propSchema: { url: { default: "/projects" }, label: { default: "関連ページ" } }, content: "none" }, {
   render: ({ block, editor }) => <div className="page-link-block"><label>リンク先<input value={block.props.url} onChange={e => editor.updateBlock(block, { props: { url: e.target.value } })} /></label><label>表示名<input value={block.props.label} onChange={e => editor.updateBlock(block, { props: { label: e.target.value } })} /></label><a href={/^(\/|https?:\/\/)/.test(block.props.url) && !block.props.url.startsWith("//") ? block.props.url : "#"}>{block.props.label} ↗</a></div>,
 })();
-export const researchSchema = BlockNoteSchema.create({ blockSpecs: { ...defaultBlockSpecs, timestamp, math, pageLink } });
-const choices = { paragraph: "文章", heading: "見出し", bulletListItem: "箇条書き", numberedListItem: "番号リスト", checkListItem: "チェック", quote: "引用", codeBlock: "コード", math: "数式", table: "表", image: "画像", file: "ファイル", divider: "区切り", pageLink: "ページリンク", timestamp: "時刻付き手順" } as const;
+export const researchSchema = BlockNoteSchema.create({ blockSpecs: { ...defaultBlockSpecs, timestamp, math, pageLink, measurement: measurementBlock } });
+const choices = { paragraph: "文章", heading: "見出し", bulletListItem: "箇条書き", numberedListItem: "番号リスト", checkListItem: "チェック", quote: "引用", codeBlock: "コード", math: "数式", table: "表", image: "画像", file: "ファイル", divider: "区切り", pageLink: "ページリンク", timestamp: "時刻付き手順", measurement: "測定表" } as const;
 
 export default function ResearchEditor({ record, draft }: { record: ResearchRecord; draft: Draft | null }) {
   const router = useRouter();
-  const editor = useCreateBlockNote({ schema: researchSchema, dictionary: ja, initialContent: ((draft?.body ?? record.body).length ? (draft?.body ?? record.body) : undefined) as PartialBlock<typeof researchSchema.blockSchema>[] | undefined });
+  const [uploadError, setUploadError] = useState("");
+  const editor = useCreateBlockNote({ schema: researchSchema, dictionary: ja, uploadFile: async file => { try { const a = await uploadAttachment(record.id, file); setUploadError(""); router.refresh(); return a.url; } catch (error) { setUploadError(error instanceof Error ? error.message : "アップロードに失敗しました。"); throw error; } }, initialContent: ((draft?.body ?? record.body).length ? (draft?.body ?? record.body) : undefined) as PartialBlock<typeof researchSchema.blockSchema>[] | undefined });
   const key = `labnote-draft:${record.id}`;
   const revision = useRef(draft?.revision ?? record.revision);
   const saved = useRef(JSON.stringify(record.body));
@@ -85,11 +88,12 @@ export default function ResearchEditor({ record, draft }: { record: ResearchReco
     editor.insertBlocks([stripIds(block) as PartialBlock<typeof researchSchema.blockSchema>], block, "after");
   }
   return <div className="research-editor">
+    {uploadError && <p role="alert">{uploadError}</p>}
     <div className="editor-toolbar"><label>ブロック<select aria-label="追加するブロック" value={type} onChange={e => setType(e.target.value as typeof type)}>{Object.entries(choices).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><button onClick={() => insert(type)}>追加</button><button onClick={() => editor.moveBlocksUp()}>上へ</button><button onClick={() => editor.moveBlocksDown()}>下へ</button><button onClick={duplicate}>複製</button><span role="status" aria-label="本文の保存状態">{status}</span></div>
     {storageError && <p role="alert">ブラウザ内に下書きを保持できません。保存済みになるまで画面を閉じないでください。</p>}
     {status.startsWith("競合") && <div className="form-error"><p>別の保存があります。下書きをコピーしてから最新の記録を開いてください。</p><button onClick={() => { const blob = new Blob([pending.current ?? "[]"], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "labnote-draft.json"; a.click(); URL.revokeObjectURL(url); }}>下書きをダウンロード</button><button onClick={() => { if (confirm("未送信の下書きを破棄し、最新の記録を開きますか？")) { localStorage.removeItem(key); location.reload(); } }}>最新の記録を開く</button></div>}
     <BlockNoteView editor={editor} theme="light" slashMenu={false} onChange={() => { const body = JSON.stringify(editor.document); if (body === saved.current && !pending.current) return; pending.current = body; editedAt.current = Date.now(); store(body); if (!locked.current) setStatus("保存中"); }}>
-      <SuggestionMenuController triggerCharacter="/" getItems={async query => [...getDefaultReactSlashMenuItems(editor), ...(["timestamp", "math", "pageLink"] as const).map(t => ({ title: choices[t], group: "研究", onItemClick: () => insert(t), aliases: [t] }))].filter(i => i.title.toLowerCase().includes(query.toLowerCase()) || i.aliases?.some(a => a.includes(query)))} />
+      <SuggestionMenuController triggerCharacter="/" getItems={async query => [...getDefaultReactSlashMenuItems(editor), ...(["timestamp", "math", "pageLink", "measurement"] as const).map(t => ({ title: choices[t], group: "研究", onItemClick: () => insert(t), aliases: [t] }))].filter(i => i.title.toLowerCase().includes(query.toLowerCase()) || i.aliases?.some(a => a.includes(query)))} />
     </BlockNoteView>
   </div>;
 }

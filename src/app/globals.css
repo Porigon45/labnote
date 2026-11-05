@@ -6,6 +6,17 @@
   --line: #e0e6dd;
   --sidebar: #203d33;
 }
+.attachment-image { display: block; max-width: 100%; max-height: 450px; object-fit: contain; }
+.attachment-panel { margin-top: 25px; }
+.attachment-panel figure { margin: 20px 0; border-top: 1px solid var(--line); padding-top: 20px; }
+.attachment-panel figcaption { margin: 12px 0; }
+.measurement { width: 100%; border: 1px solid var(--line); padding: 14px; background: #fcfdfb; }
+.measurement input { width: 100%; min-width: 60px; max-width: 140px; border: 1px solid var(--line); padding: 6px; font: inherit; }
+.measurement-labels { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; margin-bottom: 14px; }
+.measurement-labels label { display: grid; gap: 5px; }
+.table-scroll { overflow-x: auto; }
+.measurement table { width: 100%; border-collapse: collapse; }
+.measurement td, .measurement th { border: 1px solid var(--line); padding: 5px; font-size: 12px; }
 .record-form textarea { width: 100%; font: inherit; padding: 10px; border: 1px solid var(--line); border-radius: 5px; }
 .category-links { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; font-size: 12px; }
 .snapshot-text { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--paper); padding: 14px; font: inherit; line-height: 1.9; }
