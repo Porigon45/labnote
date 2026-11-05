@@ -10,10 +10,11 @@
 - M3: 完了（2026-11-06）。[ブロック編集と自動保存](../development/block-editor-autosave.md)。
 - M4: 完了（2026-11-06）。[プロトコル・試料・研究メモ](../development/research-references.md)。
 - M5: 完了（2026-11-06）。[測定表・グラフ・添付](../development/measurements-attachments.md)。
-- M6〜M7: 未着手
+- M6: 完了（2026-11-06）。[検索・リンク・アーカイブ](../development/search-links-archive.md)。
+- M7: 未着手
 - M0検証: 型チェック、単体テスト14件、初期マイグレーション、本番ビルド、Chromium E2E 2件を通過。待受が `127.0.0.1:3000` のみであることも確認済み。
 - WSLのブラウザ共有ライブラリが不足していたため、今回のE2Eは `/tmp/labnote-browser-libs` に展開したライブラリを `LD_LIBRARY_PATH` で参照して実行。通常の再実行にはREADMEのブラウザ依存導入手順を利用する。
-- 次の作業: M6の検索・リンク・アーカイブを実装する。
+- 次の作業: M7の信頼性・バックアップ・第1フェーズ完成判定を実施する。
 
 ## 目的
 

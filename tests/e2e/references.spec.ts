@@ -37,7 +37,7 @@ test("試料を登録・派生させ、プロトコルの使用版を固定し�
   await expect(page.getByText("20分培養", { exact: true })).toHaveCount(0);
   await expect(page.getByText("変更点: 室温で実施", { exact: true })).toBeVisible();
   await page.goto(`/samples/${derivedId}`);
-  await expect(page.getByRole("link", { name: /日次記録/ })).toBeVisible();
+  await expect(page.locator("section").filter({ has: page.getByRole("heading", { name: "使用した実験", exact: true }) }).getByRole("link", { name: /日次記録/ })).toBeVisible();
   await page.goto("/memos");
   await page.getByLabel("タイトル", { exact: true }).fill(`装置設定 ${suffix}`);
   await page.getByRole("combobox", { name: "カテゴリ", exact: true }).selectOption("装置・操作Tips");

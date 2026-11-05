@@ -1,0 +1,11 @@
+import Link from "next/link";
+import { searchRecords, type SearchFilters } from "@/server/search";
+import { recordPath, withResearch } from "@/server/research";
+import { Workspace } from "../components/workspace";
+export const dynamic = "force-dynamic";
+export default async function Page({ searchParams }: { searchParams: Promise<SearchFilters> }) {
+  const filters = await searchParams;
+  const all = withResearch(repo => repo.list());
+  const results = searchRecords(filters);
+  return <Workspace section="search" crumbs={[{ title: "検索" }]}><div className="page-heading"><h1>検索</h1></div><form className="panel record-form" action="/search"><label>キーワード<input name="q" defaultValue={filters.q} maxLength={300} /></label><div className="search-filters"><label>種別<select name="kind" defaultValue={filters.kind}><option value="">すべて</option>{Object.entries({ project: "プロジェクト", series: "実験シリーズ", entry: "日次記録", protocol: "プロトコル", sample: "試料", memo: "研究メモ" }).map(([k, label]) => <option key={k} value={k}>{label}</option>)}</select></label>{(["project", "series"] as const).map(key => <label key={key}>{key === "project" ? "プロジェクト" : "実験シリーズ"}<select name={key} defaultValue={filters[key]}><option value="">すべて</option>{all.filter(r => r.kind === key).map(r => <option key={r.id} value={r.id}>{r.title}</option>)}</select></label>)}<label>タグ<input name="tag" defaultValue={filters.tag} /></label><label>開始日<input type="date" name="from" defaultValue={filters.from} /></label><label>終了日<input type="date" name="to" defaultValue={filters.to} /></label><label>状態<select name="status" defaultValue={filters.status}><option value="">すべて</option><option value="planned">予定</option><option value="active">進行中</option><option value="completed">完了</option></select></label></div><button>検索する</button></form><section className="panel"><h2>検索結果（{results.length}件・最大100件）</h2>{!results.length && <p className="muted">一致する記録はありません。</p>}{results.map(({ record, ancestors, snippet, tags }) => <article className="search-result" key={record.id}><p className="eyebrow">{ancestors.map(a => a.title).join(" / ") || "ワークスペース"}</p><h3><Link href={recordPath(record)}>{record.title} →</Link></h3><p className="snapshot-text">{snippet}</p><p className="muted">{[record.date, ...tags].filter(Boolean).join(" · ")}</p></article>)}</section></Workspace>;
+}

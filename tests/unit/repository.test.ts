@@ -7,6 +7,7 @@ import { openDatabase, type DatabaseConnection } from "../../src/server/db";
 import { migrateDatabase } from "../../src/server/db/migrate";
 import { ConflictError, createRepository, type ResearchRepository } from "../../src/server/db/repository";
 import { seedResearchFixture } from "../../src/server/db/seed";
+import { searchRecords } from "../../src/server/search";
 
 let root: string;
 let connection: DatabaseConnection;
@@ -109,4 +110,24 @@ it("persists measurement values, nulls and attachment metadata and validates sha
   expect(repo.detail(f.entry.id).attachments[0].caption).toBe("結果");
   expect(() => repo.addMeasurement(f.entry.id, { ...data, rows: [{ x: 0, values: [1] }] })).toThrow();
   expect(() => repo.addAttachment({ recordId: f.entry.id, filename: "a", storageKey: "../escape", mime: "image/png", bytes: 10 })).toThrow();
+});
+
+it("indexes Japanese, ASCII, tags, referenced names and captions immediately and filters archived ancestors", () => {
+  const f = seedResearchFixture(repo);
+  const saved = repo.update(f.entry.id, 1, { title: "観察A", body: [{ id: "search-body", type: "paragraph", content: [{ type: "text", text: "日本語の培養 OD600 experiment", styles: {} }] }] });
+  repo.setTags(f.entry.id, ["培養条件"]);
+  repo.addAttachment({ recordId: f.entry.id, filename: "result.png", storageKey: "fts-photo", mime: "image/png", bytes: 1, caption: "蛍光写真" });
+  for (const q of ["培養", "日本語", "OD600", "培養条件", "蛍光写真", f.derived.title, f.protocol.title]) {
+    expect(searchRecords({ q, kind: "entry", project: f.project.id, series: f.series.id, from: "2026-01-01", to: "2026-12-31", tag: "培養条件" }, connection).map(r => r.record.id)).toContain(f.entry.id);
+  }
+  expect(searchRecords({ q: "培養", status: "completed" }, connection)).toEqual([]);
+  expect(() => searchRecords({ q: '" OR *' }, connection)).not.toThrow();
+  repo.update(f.entry.id, saved.revision, { body: [{ id: "link-block", type: "pageLink", props: { url: `/samples/${f.sample.id}`, label: "原株" } }] });
+  expect(repo.detail(f.sample.id).backlinks.map(l => l.sourceId)).toContain(f.entry.id);
+  repo.update(f.entry.id, saved.revision + 1, { body: [] });
+  expect(repo.detail(f.sample.id).backlinks.map(l => l.sourceId)).not.toContain(f.entry.id);
+  repo.setArchived(f.project.id, 1, true);
+  expect(searchRecords({ q: "蛍光写真" }, connection)).toEqual([]);
+  repo.setArchived(f.project.id, 2, false);
+  expect(searchRecords({ q: "蛍光写真" }, connection).map(r => r.record.id)).toContain(f.entry.id);
 });

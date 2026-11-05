@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { RecordRelations } from "../../components/record-relations";
 import { bodyText } from "@/lib/content";
 import Link from "next/link";
 import { collections, type Collection } from "@/lib/library";
@@ -22,5 +23,6 @@ export default async function Page({ params }: { params: Promise<{ collection: s
     {selected !== "samples" && <section className="panel"><h2>本文</h2><EditorLoader record={record} /></section>}
     {selected === "protocols" && <section className="panel"><h2>プロトコルの版履歴</h2>{record.versions.map(v => <details key={v.id}><summary>第{v.version}版 · {v.title} · {v.createdAt}</summary><pre className="snapshot-text">{bodyText(v.body) || "本文なし"}</pre></details>)}</section>}
     {selected === "samples" && <><section className="panel"><h2>派生試料</h2><RecordList records={derived} empty="派生試料はありません。" /></section><section className="panel"><h2>使用した実験</h2><RecordList records={uses} empty="参照する実験はありません。" /></section></>}
+    <RecordRelations record={record} />
   </Workspace>;
 }

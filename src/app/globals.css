@@ -6,6 +6,9 @@
   --line: #e0e6dd;
   --sidebar: #203d33;
 }
+.search-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.search-result + .search-result { border-top: 1px solid var(--line); padding-top: 20px; margin-top: 20px; }
+.search-result h3 { font-size: 15px; overflow-wrap: anywhere; }
 .attachment-image { display: block; max-width: 100%; max-height: 450px; object-fit: contain; }
 .attachment-panel { margin-top: 25px; }
 .attachment-panel figure { margin: 20px 0; border-top: 1px solid var(--line); padding-top: 20px; }

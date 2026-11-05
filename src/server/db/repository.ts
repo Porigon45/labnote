@@ -38,6 +38,17 @@ export function createRepository(connection: DatabaseConnection) {
     if (!record) throw new Error("記録が見つかりません。");
     return record;
   };
+  function syncBodyLinks(id: string, body: Block[]) {
+    connection.sqlite.prepare("DELETE FROM body_links WHERE source_id=?").run(id);
+    const scan = (value: unknown): void => {
+      if (typeof value === "string") {
+        const match = /^\/(?:entries|projects|series|protocols|samples|memos)\/([\w-]+)(?:[?#].*)?$/.exec(value);
+        if (match && match[1] !== id && get(match[1])) connection.sqlite.prepare("INSERT OR IGNORE INTO body_links(source_id,target_id) VALUES(?,?)").run(id, match[1]);
+      } else if (Array.isArray(value)) value.forEach(scan);
+      else if (value && typeof value === "object") Object.entries(value).forEach(([key, v]) => { if (["url", "href", "content", "children", "props"].includes(key)) scan(v); });
+    };
+    scan(body);
+  }
   function addVersion(protocol: typeof records.$inferSelect) {
     return db.insert(protocolVersions).values({
       id: randomUUID(), protocolId: protocol.id, version: protocol.revision,
@@ -54,6 +65,7 @@ export function createRepository(connection: DatabaseConnection) {
     if (input.parentId) requireRecord(input.parentId);
     const timestamp = now();
     const record = db.insert(records).values({ ...input, title: input.title.trim(), id: randomUUID(), createdAt: timestamp, updatedAt: timestamp }).returning().get();
+    if (input.body) syncBodyLinks(record.id, input.body);
     if (record.kind === "protocol") addVersion(record);
     return record;
   }
@@ -66,6 +78,7 @@ export function createRepository(connection: DatabaseConnection) {
         .where(and(eq(records.id, id), eq(records.revision, revision))).returning().get();
       if (!updated) throw new ConflictError();
       if (patch.body !== undefined) {
+        syncBodyLinks(id, patch.body);
         db.delete(measurements).where(eq(measurements.recordId, id)).run();
         const collect = (blocks: Block[]) => {
           for (const b of blocks) {
@@ -162,8 +175,8 @@ export function createRepository(connection: DatabaseConnection) {
       protocols: db.select({ snapshot: protocolSnapshots, version: protocolVersions }).from(protocolSnapshots).innerJoin(protocolVersions, eq(protocolSnapshots.versionId, protocolVersions.id)).where(eq(protocolSnapshots.entryId, id)).all(),
       measurements: db.select().from(measurements).where(eq(measurements.recordId, id)).all(),
       attachments: db.select().from(attachments).where(eq(attachments.recordId, id)).all(),
-      outgoing: db.select().from(links).where(eq(links.sourceId, id)).all(),
-      backlinks: db.select().from(links).where(eq(links.targetId, id)).all(),
+      outgoing: connection.sqlite.prepare("SELECT source_id AS sourceId,target_id AS targetId FROM content_links WHERE source_id=? UNION SELECT source_id,target_id FROM body_links WHERE source_id=?").all(id, id) as { sourceId: string; targetId: string }[],
+      backlinks: connection.sqlite.prepare("SELECT source_id AS sourceId,target_id AS targetId FROM content_links WHERE target_id=? UNION SELECT source_id,target_id FROM body_links WHERE target_id=? UNION SELECT s.entry_id,v.protocol_id FROM protocol_snapshots s JOIN protocol_versions v ON v.id=s.version_id WHERE v.protocol_id=?").all(id, id, id) as { sourceId: string; targetId: string }[],
     };
   }
   return { create, get, list, update, setArchived, setTags, link, createSample, updateSample, editSample, useProtocol, addMeasurement, addAttachment, detail };

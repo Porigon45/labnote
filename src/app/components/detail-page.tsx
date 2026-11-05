@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { RecordRelations } from "./record-relations";
 import { EntryContent as EditorLoader } from "./entry-content";
 import Link from "next/link";
 import { Workspace, RecordList } from "./workspace";
@@ -18,5 +19,6 @@ export function DetailPage({ id, kind }: { id: string; kind: FlowKind }) {
   return <Workspace section={kind === "project" ? "projects" : "series"} crumbs={[{ title: "プロジェクト", href: "/projects" }, ...ancestors.map(a => ({ title: a.title, href: recordPath(a) })), { title: record.title }]} info={info}>
     <div className="page-heading"><div><p className="eyebrow">{kindLabels[kind]}</p><h1>{record.title}</h1><p className="subtitle">{record.date ? `${record.date} · ` : ""}{statusLabels[record.status]}</p></div></div>
     {kind === "entry" ? <><section className="panel"><h2>記録の基本情報</h2><RecordForm key={record.id} kind="entry" record={record} /></section><section className="panel entry-body"><h2>実験記録</h2><EditorLoader record={record} /></section></> : <><section className="panel"><div className="section-heading"><h2>{kind === "project" ? "実験シリーズ" : "日次記録"}</h2><span>{children.length}件{kind === "series" ? " · 日付の新しい順" : ""}</span></div><RecordList records={children} empty={`${kindLabels[childKind]}はまだありません。下のフォームから作成できます。`} /></section><section className="panel"><h2>新しい{kindLabels[childKind]}</h2><RecordForm kind={childKind} parentId={id} initialDate={today()} /></section></>}
+    <RecordRelations record={record} />
   </Workspace>;
 }

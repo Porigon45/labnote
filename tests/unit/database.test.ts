@@ -39,7 +39,7 @@ describe("database foundation", () => {
     migrateDatabase(config, migrationDirectory);
     connection = openDatabase(config);
     expect(connection.sqlite.prepare("select count(*) as count from __drizzle_migrations").get())
-      .toEqual({ count: 2 });
+      .toEqual({ count: 3 });
     const tables = connection.sqlite.prepare(
       "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'",
     ).all();

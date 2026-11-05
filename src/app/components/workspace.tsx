@@ -14,6 +14,8 @@ export function Workspace({ children, section = "home", crumbs = [], info }: {
         {[{ key: "home", href: "/", label: "ダッシュボード", icon: LayoutDashboard }, { key: "projects", href: "/projects", label: "プロジェクト", icon: FolderOpen }, { key: "series", href: "/series", label: "実験シリーズ", icon: FlaskConical }].map(({ key, href, label, icon: Icon }) => <Link key={key} href={href} className={`nav-item ${section === key ? "nav-item-active" : ""}`} aria-current={section === key ? "page" : undefined}><Icon size={18} aria-hidden="true" />{label}</Link>)}
         {[{ key: "protocols", label: "プロトコル", icon: BookMarked }, { key: "samples", label: "試料台帳", icon: TestTubes }, { key: "memos", label: "研究メモ", icon: FileText }].map(({ key, label, icon: Icon }) => <Link key={key} href={`/${key}`} className={`nav-item ${section === key ? "nav-item-active" : ""}`} aria-current={section === key ? "page" : undefined}><Icon size={18} aria-hidden="true" />{label}</Link>)}
       </nav>
+      <Link href="/search" className={`nav-item ${section === "search" ? "nav-item-active" : ""}`}><FileText size={18} aria-hidden="true" />検索</Link>
+      <Link href="/archive" className={`nav-item ${section === "archive" ? "nav-item-active" : ""}`}><FolderOpen size={18} aria-hidden="true" />アーカイブ</Link>
       <p className="sidebar-note">ひとつずつ、研究の足跡を。</p>
     </aside>
     <div className="main-shell">
