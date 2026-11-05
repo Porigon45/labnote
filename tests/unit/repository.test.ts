@@ -73,6 +73,13 @@ it("rolls back invalid sample creation and prevents ancestry cycles", () => {
   expect(repo.detail(f.derived.id).sample?.location).toBe("冷蔵棚");
 });
 
+it("rolls back sample metadata and page changes together when ancestry is invalid", () => {
+  const f = seedResearchFixture(repo);
+  expect(() => repo.editSample(f.sample.id, 1, { title: "上書き禁止" }, { parentSampleId: f.derived.id })).toThrow();
+  expect(repo.get(f.sample.id)?.title).toBe(f.sample.title);
+  expect(repo.get(f.sample.id)?.revision).toBe(1);
+});
+
 it("hides descendants of archived projects and restores them without changing child flags", () => {
   const f = seedResearchFixture(repo);
   const archived = repo.setArchived(f.project.id, 1, true);

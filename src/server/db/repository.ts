@@ -28,6 +28,9 @@ function validate(input: RecordPatch) {
 /** Owns no connection: caller closes the supplied connection after use. */
 export function createRepository(connection: DatabaseConnection) {
   const { db } = connection;
+  // Acquire the writer lock before reading: deferred read-to-write upgrades can
+  // fail immediately with SQLITE_BUSY when another connection writes in WAL mode.
+  const transaction = <T>(work: () => T): T => db.transaction(work, { behavior: "immediate" });
   const get = (id: string) => db.select().from(records).where(eq(records.id, id)).get();
   const requireRecord = (id: string) => {
     const record = get(id);
@@ -44,7 +47,7 @@ export function createRepository(connection: DatabaseConnection) {
     validate(input);
     if (input.kind === "entry" && !input.date) throw new Error("日次記録の日付を入力してください。");
     if (input.kind === "sample") throw new Error("試料はcreateSampleで作成してください。");
-    return db.transaction(() => insert(input));
+    return transaction(() => insert(input));
   }
   function insert(input: CreateRecord) {
     if (input.parentId) requireRecord(input.parentId);
@@ -55,7 +58,7 @@ export function createRepository(connection: DatabaseConnection) {
   }
   function update(id: string, revision: number, patch: RecordPatch) {
     validate(patch);
-    return db.transaction(() => {
+    return transaction(() => {
       const existing = requireRecord(id);
       if (existing.revision !== revision) throw new ConflictError();
       const updated = db.update(records).set({ ...patch, title: patch.title?.trim() ?? existing.title, revision: revision + 1, updatedAt: now() })
@@ -85,7 +88,7 @@ export function createRepository(connection: DatabaseConnection) {
   function setTags(id: string, names: string[]) {
     requireRecord(id);
     const cleaned = [...new Set(names.map(n => n.trim()).filter(Boolean))];
-    db.transaction(() => {
+    transaction(() => {
       db.delete(recordTags).where(eq(recordTags.recordId, id)).run();
       for (const name of cleaned) {
         db.insert(tags).values({ id: randomUUID(), name }).onConflictDoNothing().run();
@@ -99,7 +102,7 @@ export function createRepository(connection: DatabaseConnection) {
   }
   function createSample(input: Omit<CreateRecord, "kind"> & { type: typeof samples.$inferInsert.type; parentSampleId?: string; origin?: string; location?: string }) {
     validate(input);
-    return db.transaction(() => {
+    return transaction(() => {
       const { type, parentSampleId, origin, location, ...page } = input;
       const record = insert({ ...page, kind: "sample" });
       db.insert(samples).values({ recordId: record.id, type, parentSampleId, origin, location }).run();
@@ -110,10 +113,18 @@ export function createRepository(connection: DatabaseConnection) {
     return db.insert(protocolSnapshots).values({ id: randomUUID(), entryId, versionId, changes, createdAt: now() }).returning().get();
   }
   function updateSample(id: string, revision: number, patch: Partial<Pick<typeof samples.$inferInsert, "type" | "parentSampleId" | "origin" | "location">>) {
-    return db.transaction(() => {
+    return transaction(() => {
       if (requireRecord(id).kind !== "sample") throw new Error("試料ではありません。");
       update(id, revision, {});
       return db.update(samples).set(patch).where(eq(samples.recordId, id)).returning().get();
+    });
+  }
+  function editSample(id: string, revision: number, page: RecordPatch, patch: Partial<Pick<typeof samples.$inferInsert, "type" | "parentSampleId" | "origin" | "location">>) {
+    return transaction(() => {
+      if (requireRecord(id).kind !== "sample") throw new Error("試料ではありません。");
+      const record = update(id, revision, page);
+      db.update(samples).set(patch).where(eq(samples.recordId, id)).run();
+      return record;
     });
   }
   function addMeasurement(recordId: string, data: MeasurementData) {
@@ -140,7 +151,7 @@ export function createRepository(connection: DatabaseConnection) {
       backlinks: db.select().from(links).where(eq(links.targetId, id)).all(),
     };
   }
-  return { create, get, list, update, setArchived, setTags, link, createSample, updateSample, useProtocol, addMeasurement, addAttachment, detail };
+  return { create, get, list, update, setArchived, setTags, link, createSample, updateSample, editSample, useProtocol, addMeasurement, addAttachment, detail };
 }
 
 export type ResearchRepository = ReturnType<typeof createRepository>;

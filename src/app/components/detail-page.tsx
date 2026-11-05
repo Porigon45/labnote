@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { EditorLoader } from "./editor-loader";
+import { EntryContent as EditorLoader } from "./entry-content";
 import Link from "next/link";
 import { Workspace, RecordList } from "./workspace";
 import { RecordForm } from "./record-form";

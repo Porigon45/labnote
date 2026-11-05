@@ -3,7 +3,7 @@ import { BookMarked, FileText, FlaskConical, FolderOpen, LayoutDashboard, Monito
 import { recordPath, statusLabels, type ResearchRecord } from "@/server/research";
 
 export function Workspace({ children, section = "home", crumbs = [], info }: {
-  children: React.ReactNode; section?: "home" | "projects" | "series";
+  children: React.ReactNode; section?: "home" | "projects" | "series" | "protocols" | "samples" | "memos" | "search" | "archive";
   crumbs?: { title: string; href?: string }[]; info?: React.ReactNode;
 }) {
   return <div className="workspace">
@@ -12,7 +12,7 @@ export function Workspace({ children, section = "home", crumbs = [], info }: {
       <Link className="brand" href="/" aria-label="labnote ホーム"><Sprout size={25} aria-hidden="true" /><span>labnote.</span></Link>
       <nav aria-label="メインナビゲーション">
         {[{ key: "home", href: "/", label: "ダッシュボード", icon: LayoutDashboard }, { key: "projects", href: "/projects", label: "プロジェクト", icon: FolderOpen }, { key: "series", href: "/series", label: "実験シリーズ", icon: FlaskConical }].map(({ key, href, label, icon: Icon }) => <Link key={key} href={href} className={`nav-item ${section === key ? "nav-item-active" : ""}`} aria-current={section === key ? "page" : undefined}><Icon size={18} aria-hidden="true" />{label}</Link>)}
-        {[{ label: "プロトコル", icon: BookMarked }, { label: "試料台帳", icon: TestTubes }, { label: "研究メモ", icon: FileText }].map(({ label, icon: Icon }) => <div key={label} className="nav-item nav-item-planned" aria-disabled="true"><Icon size={18} aria-hidden="true" />{label}</div>)}
+        {[{ key: "protocols", label: "プロトコル", icon: BookMarked }, { key: "samples", label: "試料台帳", icon: TestTubes }, { key: "memos", label: "研究メモ", icon: FileText }].map(({ key, label, icon: Icon }) => <Link key={key} href={`/${key}`} className={`nav-item ${section === key ? "nav-item-active" : ""}`} aria-current={section === key ? "page" : undefined}><Icon size={18} aria-hidden="true" />{label}</Link>)}
       </nav>
       <p className="sidebar-note">ひとつずつ、研究の足跡を。</p>
     </aside>
