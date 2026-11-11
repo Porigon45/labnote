@@ -16,12 +16,11 @@ export function Workspace({ children, section = "home", crumbs = [], info }: {
       </nav>
       <Link href="/search" className={`nav-item ${section === "search" ? "nav-item-active" : ""}`}><FileText size={18} aria-hidden="true" />検索</Link>
       <Link href="/archive" className={`nav-item ${section === "archive" ? "nav-item-active" : ""}`}><FolderOpen size={18} aria-hidden="true" />アーカイブ</Link>
-      <p className="sidebar-note">ひとつずつ、研究の足跡を。</p>
       <Link className="nav-item" href="/storage">保存とバックアップ</Link>
     </aside>
     <div className="main-shell">
       <header className="topbar"><nav aria-label="パンくず"><ol><li><Link href="/">ホーム</Link></li>{crumbs.map((c, i) => <li key={i}>{c.href ? <Link href={c.href}>{c.title}</Link> : <span aria-current="page">{c.title}</span>}</li>)}</ol></nav><span className="local-badge"><Monitor size={14} aria-hidden="true" />ローカル</span></header>
-      <div className="content-layout"><main id="main-content">{children}</main><aside className="info-panel" aria-label="記録の情報">{info ?? <><h2>研究のワークスペース</h2><p>プロジェクトに実験シリーズをまとめ、日々の記録を積み重ねましょう。</p><div className="info-divider" /><h3>記録の流れ</h3><p>プロジェクト<br />↓<br />実験シリーズ<br />↓<br />日次記録</p></>}</aside></div>
+      <div className={`content-layout${info ? " has-info" : ""}`}><main id="main-content">{children}</main>{info && <aside className="info-panel" aria-label="記録の情報">{info}</aside>}</div>
     </div>
   </div>;
 }
